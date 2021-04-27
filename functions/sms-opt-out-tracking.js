@@ -6,8 +6,8 @@ const AWS = require('aws-sdk');
 
 export async function handler(context, event, callback) {
   const payload = JSON.parse(event.Payload);
-  console.log(payload.error_code);
-  console.log(payload.resource_sid);
+  console.log(`payload.error_code: ${payload.error_code}`);
+  console.log(`payload.resource_sid: ${payload.resource_sid}`);
 
   const client = context.getTwilioClient();
   let stop_sms_data = {};
@@ -18,8 +18,8 @@ export async function handler(context, event, callback) {
         console.log("80901 error");
         stop_sms_data = await client.messages(payload.resource_sid)
             .fetch()
-    
-        console.log(JSON.stringify(stop_sms_data));
+        let stop_sms_data_string = JSON.stringify(stop_sms_data)
+        console.log(`stop_sms_data_string: ${stop_sms_data_string}`);
     } else {
         callback(null,"");
     }
@@ -37,7 +37,6 @@ export async function handler(context, event, callback) {
     // let sqs = new SQS({ region: 'us-east-2' });
     let sqs = new AWS.SQS({ region: 'us-east-2' });
 
-
     const res = new Twilio.Response();
         res.appendHeader("Access-Control-Allow-Origin", "*");
         res.appendHeader("Access-Control-Allow-Methods", "OPTIONS POST");
@@ -46,15 +45,16 @@ export async function handler(context, event, callback) {
     let response = { response: true };
     
     //TODO: scrub phone number from e16 "+"?
-    let stop_sms_body = JSON.stringify(
-      {
+    let stop_sms_body = {
       PhoneNumber: stop_sms_data.from,
       StopDate: stop_sms_data.dateUpdated
       }
-    )
+    console.log(`stop_sms_data.from: ${stop_sms_data.from}`);
+    console.log(`stop_sms_data.dateUpdated: ${stop_sms_data.dateUpdated}`);
+
 
     let sendParameters = {
-        MessageBody: stop_sms_body,
+        MessageBody: JSON.stringify(stop_sms_body),
         QueueUrl: process.env.SMS_STOP_URL
     };
 
